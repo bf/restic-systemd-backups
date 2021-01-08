@@ -24,10 +24,10 @@ ExecStart=restic backup --verbose /home/user/my-git-repository.git
 # they will be processed sequentially.
 
 # 3) Forget unneeded backups according to policy
-ExecStartPost=restic forget --verbose --group-by "paths" --keep-daily $RETENTION_DAYS --keep-weekly $RETENTION_WEEKS --keep-monthly $RETENTION_MONTHS --keep-yearly $RETENTION_YEARS --keep-hourly $RETENTION_HOURS
+ExecStartPost=restic forget --verbose --prune --group-by "paths" --keep-daily $RETENTION_DAYS --keep-weekly $RETENTION_WEEKS --keep-monthly $RETENTION_MONTHS --keep-yearly $RETENTION_YEARS --keep-hourly $RETENTION_HOURS
 
 # 4) Copy local backups to offsite location
 ExecStartPost=rsync -aHrv $RESTIC_REPOSITORY $RSYNC_TARGET
 
 # 5) Forget unneeded backups in offsite location according to policy
-ExecStartPost=restic forget -r "sftp:${RSYNC_TARGET}" --verbose --group-by "paths" --keep-daily $RETENTION_DAYS --keep-weekly $RETENTION_WEEKS --keep-monthly $RETENTION_MONTHS --keep-yearly $RETENTION_YEARS --keep-hourly $RETENTION_HOURS
+ExecStartPost=restic forget -r "sftp:${RSYNC_TARGET}" --verbose --prune --group-by "paths" --keep-daily $RETENTION_DAYS --keep-weekly $RETENTION_WEEKS --keep-monthly $RETENTION_MONTHS --keep-yearly $RETENTION_YEARS --keep-hourly $RETENTION_HOURS
