@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for Restic Backup
+
+[Timer]
+Persistent=true
+
+# Run every 6 hours, see https://wiki.archlinux.org/index.php/Systemd/Timers
+OnCalendar=00/6:00
+
+[Install]
+WantedBy=timers.target

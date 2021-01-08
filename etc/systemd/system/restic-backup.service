@@ -1,0 +1,33 @@
+[Unit]
+Description=Restic backup service
+
+[Service]
+Type=oneshot
+
+# All restic environment variables are defined in /root/restic-backup.env
+EnvironmentFile=/root/restic-backup.env
+
+## Main Backup logic
+# The "ExecStart" statements are the main backup logic.
+# We can have as many "ExecStart" statements as we want,
+# they will be processed sequentially.
+
+# 1) Backup of PostgreSQL database (careful: special syntax when using pipes!)
+ExecStart=/bin/sh -c 'pg_dumpall -U postgres | restic backup --verbose --stdin --stdin-filename postgresql-database.dump.sql'
+
+# 2) Backup of git repository
+ExecStart=restic backup --verbose /home/user/my-git-repository.git
+
+## Post-Backup logic
+# The "ExecStartPost" clean up after the backup is done.
+# We can have as many "ExecStartPost" statements as we want,
+# they will be processed sequentially.
+
+# 3) Forget unneeded backups according to policy
+ExecStartPost=restic forget --verbose --group-by "paths" --keep-daily $RETENTION_DAYS --keep-weekly $RETENTION_WEEKS --keep-monthly $RETENTION_MONTHS --keep-yearly $RETENTION_YEARS --keep-hourly $RETENTION_HOURS
+
+# 4) Copy local backups to offsite location
+ExecStartPost=rsync -aHrv $RESTIC_REPOSITORY $RSYNC_TARGET
+
+# 5) Forget unneeded backups in offsite location according to policy
+ExecStartPost=restic forget -r "sftp:${RSYNC_TARGET}" --verbose --group-by "paths" --keep-daily $RETENTION_DAYS --keep-weekly $RETENTION_WEEKS --keep-monthly $RETENTION_MONTHS --keep-yearly $RETENTION_YEARS --keep-hourly $RETENTION_HOURS
